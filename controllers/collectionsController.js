@@ -6,7 +6,11 @@ const handleError = (res, err, message) => {
 };
 
 // Всі колекції
+
 exports.getAllCollections = async (req, res) => {
+  const bookCoversURL =
+    "https://uvwetrfuyqrggehpmrjr.supabase.co/storage/v1/object/public/images/book_covers/";
+
   try {
     const result = await client.query(`
       SELECT c.collectionid AS catalog_id, c.name AS catalog_name, c.entrydate AS catalog_entry_date,
@@ -16,17 +20,32 @@ exports.getAllCollections = async (req, res) => {
       JOIN collectionbooks cb ON c.collectionid = cb.collectionid
       JOIN books b ON cb.bookid = b.bookid;
     `);
+
     const catalogs = result.rows.reduce((acc, row) => {
-      const { catalog_id, catalog_name, catalog_entry_date, ...book } = row;
+      const {
+        catalog_id,
+        catalog_name,
+        catalog_entry_date,
+        book_photo,
+        ...book
+      } = row;
+      const fullPhotoURL = book_photo ? `${bookCoversURL}${book_photo}` : null;
+
       acc[catalog_id] ||= {
         catalog_id,
         catalog_name,
         catalog_entry_date,
         books: [],
       };
-      acc[catalog_id].books.push(book);
+
+      acc[catalog_id].books.push({
+        ...book,
+        book_photo: fullPhotoURL,
+      });
+
       return acc;
     }, {});
+
     res.json(Object.values(catalogs));
   } catch (err) {
     handleError(res, err, "Помилка при отриманні колекцій");

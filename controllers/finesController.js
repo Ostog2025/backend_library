@@ -1,14 +1,37 @@
+require("dotenv").config();
 const client = require("../db/db");
+const jwt = require("jsonwebtoken");
+
+function getUserIdFromToken(req) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    throw new Error("Токен відсутній або некоректний формат");
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  console.log("Токен для перевірки:", token);
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log("Decoded Token:", decoded);
+    return decoded.userId;
+  } catch (err) {
+    console.error("Помилка при декодуванні токена:", err.message);
+    throw new Error("Недійсний токен");
+  }
+}
 
 // Штрафи користувача
 exports.getUserFines = async (req, res) => {
-  const { userId } = req.params;
   try {
+    const userId = getUserIdFromToken(req);
     const query = `
-      SELECT f.fineid, f.amount, f.paymentstatus 
-      FROM fines f 
-      JOIN reservations r ON f.reservationid = r.reservationid 
-      WHERE r.userid = $1
+      SELECT f.fineid, f.amount, f.paymentstatus
+      FROM fines f
+      JOIN reservations r ON f.reservationid = r.reservationid
+      WHERE r.userid = $1;
     `;
     const result = await client.query(query, [userId]);
     res.status(200).json(result.rows);
@@ -20,13 +43,13 @@ exports.getUserFines = async (req, res) => {
 
 // Загальний штраф користувача
 exports.getTotalUserFines = async (req, res) => {
-  const { userId } = req.params;
   try {
+    const userId = getUserIdFromToken(req);
     const totalFineQuery = `
       SELECT SUM(f.amount) AS total_fines
       FROM fines f
       JOIN reservations r ON f.reservationid = r.reservationid
-      WHERE r.userid = $1
+      WHERE r.userid = $1;
     `;
     const totalFineResult = await client.query(totalFineQuery, [userId]);
 

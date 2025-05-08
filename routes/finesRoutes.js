@@ -8,12 +8,9 @@ const {
 
 const router = express.Router();
 
-router.get("/:userId", getUserFines);
-
-router.get("/total/:userId", getTotalUserFines);
-
+router.get("/", getUserFines);
+router.get("/total/", getTotalUserFines);
 router.post("/", addFine);
-
 router.delete("/:fineId", deleteFine);
 
 module.exports = router;

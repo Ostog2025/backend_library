@@ -1,18 +1,23 @@
 const express = require("express");
 const router = express.Router();
 const {
+  getUsers,
   updateProfile,
+  updateUserByAdmin,
   deleteUser,
-  getUserById,
+  getUserByToken,
 } = require("../controllers/userController");
+const { authenticateToken, checkIsAdmin } = require("../middlewares/auth");
 
-// Оновлення профілю
+router.get("/get-users", getUsers);
 router.put("/update-profile", updateProfile);
-
-// Видалення профілю
+router.put(
+  "/admin-update-user",
+  authenticateToken,
+  checkIsAdmin,
+  updateUserByAdmin
+);
 router.delete("/delete-user", deleteUser);
-
-// Пошук користувача за ID
-router.get("/get-user/:userId", getUserById);
+router.get("/me", getUserByToken);
 
 module.exports = router;

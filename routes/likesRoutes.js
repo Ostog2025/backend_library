@@ -6,10 +6,8 @@ const {
   removeLike,
 } = require("../controllers/likesController");
 
-router.get("/:userid", getUserLikes);
-
+router.get("/", getUserLikes);
 router.post("/", addLike);
-
 router.delete("/:likeid", removeLike);
 
 module.exports = router;
